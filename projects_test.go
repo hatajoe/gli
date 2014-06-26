@@ -1,5 +1,6 @@
 package projects
 
+import "fmt"
 import "os"
 import "strconv"
 import "testing"
@@ -85,12 +86,14 @@ func TestDescribe(t *testing.T) {
         {
             Id: 4, 
             Ssh_url_to_repo: "git@example.com:diaspora/diaspora-client.git", 
-            Http_url_to_repo: "http://example.com/diaspora/diaspora-client.git",
+            Web_url: "http://example.com/diaspora/diaspora-client",
+            Path_with_namespace: "diaspora/diaspora-client",
         },
         {
             Id: 6, 
             Ssh_url_to_repo: "git@example.com:brightbox/puppet.git", 
-            Http_url_to_repo: "http://example.com/brightbox/puppet.git",
+            Web_url: "http://example.com/brightbox/puppet",
+            Path_with_namespace: "brightbox/puppet",
         },
     }
     expectedCount := 2
@@ -111,16 +114,32 @@ func TestDescribe(t *testing.T) {
         for _, described := range describedProjects {
             if (expected.Id == described.Id &&
                 expected.Ssh_url_to_repo == described.Ssh_url_to_repo &&
-                expected.Http_url_to_repo == described.Http_url_to_repo) {
+                expected.Web_url == described.Web_url &&
+                expected.Path_with_namespace == described.Path_with_namespace) {
                 testedCount = testedCount + 1
             }
         }
     }
-
     if expectedCount != testedCount {
         t.Errorf("return object has invalid format")
     }
- 
+
+    testedCount = 0;
+    for _, expected := range expectedDescribedStructs {
+        for _, described := range describedProjects {
+            if (expected.Id == described.Id) {
+                e := fmt.Sprintf("#%d\t%s\t%s\t%s", expected.Id, expected.Path_with_namespace, expected.Web_url, expected.Ssh_url_to_repo)
+                if (e == described.ToLine()) {
+                    testedCount = testedCount + 1
+                }
+            }
+        }
+    }
+    if expectedCount != testedCount {
+        t.Errorf("return object has invalid line format")
+    }
+
+
     env = Env { 
         Endpoint: os.Getenv("GITLAB_API_DOMAIN"),
         Version: version,
@@ -130,5 +149,6 @@ func TestDescribe(t *testing.T) {
     if err != nil {
         t.Error(err)
     }
+    describedProjects.EchoLines()
 }
 
