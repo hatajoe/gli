@@ -1,5 +1,7 @@
 package projects
 
+import "os"
+import "strconv"
 import "testing"
 
 func TestDescribe(t *testing.T) {
@@ -81,25 +83,35 @@ func TestDescribe(t *testing.T) {
     `
     expectedDescribedStructs := Projects {
         {
-            id: 4, 
-            ssh_url_to_repo: "git@example.com:diaspora/diaspora-client.git", 
-            http_url_to_repo: "http://example.com/diaspora/diaspora-client.git",
+            Id: 4, 
+            Ssh_url_to_repo: "git@example.com:diaspora/diaspora-client.git", 
+            Http_url_to_repo: "http://example.com/diaspora/diaspora-client.git",
         },
         {
-            id: 6, 
-            ssh_url_to_repo: "git@example.com:brightbox/puppet.git", 
-            http_url_to_repo: "http://example.com/brightbox/puppet.git",
+            Id: 6, 
+            Ssh_url_to_repo: "git@example.com:brightbox/puppet.git", 
+            Http_url_to_repo: "http://example.com/brightbox/puppet.git",
         },
     }
     expectedCount := 2
 
-    testedCount := 0 
-    describedProjects := Describe(expectedResponseJson)
+    testedCount := 0
+    version, _ := strconv.Atoi(os.Getenv("GITLAB_API_VERSION"))
+    env := Env { 
+        Endpoint: os.Getenv("GITLAB_API_DOMAIN"),
+        Version: version,
+        TokenSecret: os.Getenv("GITLAB_API_TOKEN"),
+        Body: expectedResponseJson,
+    }
+    describedProjects, err := Describe(env)
+    if err != nil {
+        t.Error(err)
+    }
     for _, expected := range expectedDescribedStructs {
         for _, described := range describedProjects {
-            if (expected.id == described.id &&
-                expected.ssh_url_to_repo == described.ssh_url_to_repo &&
-                expected.http_url_to_repo == described.http_url_to_repo) {
+            if (expected.Id == described.Id &&
+                expected.Ssh_url_to_repo == described.Ssh_url_to_repo &&
+                expected.Http_url_to_repo == described.Http_url_to_repo) {
                 testedCount = testedCount + 1
             }
         }
@@ -107,6 +119,16 @@ func TestDescribe(t *testing.T) {
 
     if expectedCount != testedCount {
         t.Errorf("return object has invalid format")
+    }
+ 
+    env = Env { 
+        Endpoint: os.Getenv("GITLAB_API_DOMAIN"),
+        Version: version,
+        TokenSecret: os.Getenv("GITLAB_API_TOKEN"),
+    }
+    describedProjects, err = Describe(env)
+    if err != nil {
+        t.Error(err)
     }
 }
 
