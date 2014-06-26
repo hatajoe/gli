@@ -5,6 +5,8 @@ import (
     "fmt"
     "io/ioutil"
     "net/http"
+    "os"
+    "text/tabwriter"
 )
 
 type Env struct {
@@ -16,11 +18,25 @@ type Env struct {
 
 type Project struct {
     Id int
+    Path_with_namespace string
+    Web_url string
     Ssh_url_to_repo string
-    Http_url_to_repo string
 }
 
 type Projects []Project
+
+func (p *Project) ToLine() string {
+    return fmt.Sprintf("#%d\t%s\t%s\t%s", p.Id, p.Path_with_namespace, p.Web_url, p.Ssh_url_to_repo)
+}
+
+func (ps *Projects) EchoLines() {
+    w := new(tabwriter.Writer)
+    w.Init(os.Stdout, 0, 8, 4, '\t', 0)
+    for _, p := range *ps {
+        fmt.Fprintln(w, p.ToLine())
+    }
+    w.Flush()
+}
 
 func Describe(env Env) (projects Projects, err error) {
 
