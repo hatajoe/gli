@@ -128,7 +128,7 @@ func TestDescribe(t *testing.T) {
     for _, expected := range expectedDescribedStructs {
         for _, described := range describedProjects {
             if (expected.Id == described.Id) {
-                e := fmt.Sprintf("#%d\t%s\t%s", expected.Id, expected.Path_with_namespace, expected.Web_url, expected.Ssh_url_to_repo)
+                e := fmt.Sprintf("#%d\t%s\t%s\t%s", expected.Id, expected.Path_with_namespace, expected.Web_url, expected.Ssh_url_to_repo)
                 if (e == described.ToLine()) {
                     testedCount = testedCount + 1
                 }
