@@ -8,12 +8,14 @@ import (
 	"strconv"
 
 	"github.com/hatajoe/gli/issues"
+	"github.com/hatajoe/gli/milestones"
 	"github.com/hatajoe/gli/projects"
 )
 
 // Commands is available command list
 var Commands = []cli.Command{
 	commandProjects,
+	commandMilestones,
 	commandIssues,
 }
 
@@ -23,6 +25,14 @@ var commandProjects = cli.Command{
 	Description: `
 `,
 	Action: doProjects,
+}
+
+var commandMilestones = cli.Command{
+	Name:  "milestones",
+	Usage: "",
+	Description: `
+`,
+	Action: doMilestones,
 }
 
 var commandIssues = cli.Command{
@@ -117,4 +127,46 @@ func doIssues(c *cli.Context) {
 	}
 
 	describedIssues.EchoLines()
+}
+
+func doMilestones(c *cli.Context) {
+	if len(c.Args()) <= 0 {
+		fmt.Println("need to project ID")
+		os.Exit(1)
+	}
+	projectID, err := strconv.Atoi(c.Args()[0])
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	version, _ := strconv.Atoi(os.Getenv("GITLAB_API_VERSION"))
+	env := milestones.Env{
+		Endpoint:    os.Getenv("GITLAB_API_DOMAIN"),
+		Version:     version,
+		TokenSecret: os.Getenv("GITLAB_API_TOKEN"),
+	}
+	describedMilestones, err := milestones.Describe(projectID, 1, env)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	page := 2
+	for true {
+		is, err := milestones.Describe(projectID, page, env)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		if len(is) <= 0 {
+			break
+		}
+		for _, i := range is {
+			describedMilestones = append(describedMilestones, i)
+		}
+		page++
+	}
+
+	describedMilestones.EchoLines()
 }
